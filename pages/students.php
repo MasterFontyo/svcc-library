@@ -55,10 +55,25 @@ function toggleOrder($currentOrder) {
     table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
     th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
     th { background: #f0f0f0; }
+    th a,
+    th a:visited,
+    th a:active {
+    color:rgb(255, 255, 255) !important;
+    text-decoration: none;
+    cursor: pointer;
+    display: block;
+    padding: 0.5em 0.2em;
+    border-radius: 2px;
+    font-weight: bold;
+    }
+    th a:hover {
+    background: #f5eaea !important;
+    color: #a83232;
+}
     @media (max-width: 600px) { table, thead, tbody, th, td, tr { display: block; } th, td { width: 100%; } }
 </style>
 
-<h2>Students</h2>
+<h2>Library Users</h2>
 <button id="openModalBtn" class="btn-primary" style="margin-bottom:10px;">Add</button>
 <form method="get" style="margin-bottom:10px;">
     <input type="text" name="search" value="<?= htmlspecialchars($search); ?>" placeholder="Search by name or ID">
@@ -251,105 +266,80 @@ function toggleOrder($currentOrder) {
 
 <!-- Edit Student Modal -->
 <div id="editStudentModal" class="modal">
-    <div class="modal-content" style="width:500px;">
-        <span class="close" id="closeEditModalBtn">&times;</span>
-        <h3>Edit Student</h3>
-        <form method="post" id="editStudentForm" autocomplete="off">
-            <input type="hidden" name="edit_student_id" id="edit_student_id">
-            <div class="form-group">
-                <label for="edit_lastname">Last Name</label>
-                <input type="text" name="lastname" id="edit_lastname" required>
-            </div>
-            <div class="form-group">
-                <label for="edit_firstname">First Name</label>
-                <input type="text" name="firstname" id="edit_firstname" required>
-            </div>
-            <div class="form-group">
-                <label for="edit_middlename">Middle Name</label>
-                <input type="text" name="middlename" id="edit_middlename">
-            </div>
-            <div class="form-group">
-                <label for="edit_course">Course</label>
-                <select name="course" id="edit_course" required>
-                    <option value="">Select Course</option>
-                    <option value="BEED-GEN">BEED-GEN</option>
-                    <option value="BSA">BSA</option>
-                    <option value="BSAIS">BSAIS</option>
-                    <option value="BSBA-MM">BSBA-MM</option>
-                    <option value="BSCRIM">BSCRIM</option>
-                    <option value="BSED-ENG">BSED-ENG</option>
-                    <option value="BSED-FIL">BSED-FIL</option>
-                    <option value="BSED-MATH">BSED-MATH</option>
-                    <option value="BSHM">BSHM</option>
-                    <option value="BSIT">BSIT</option>
-                    <option value="BSPSY">BSPSY</option>
-                    <option value="BSTM">BSTM</option>
-                    <option value="BPED">BPED</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="edit_year_level">Year Level</label>
-                <select name="year_level" id="edit_year_level" required>
-                    <option value="">Select Year</option>
-                    <option value="1">1st Year</option>
-                    <option value="2">2nd Year</option>
-                    <option value="3">3rd Year</option>
-                    <option value="4">4th Year</option>
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="edit_type"><strong>User Type</strong></label>
-                <select id="edit_type" name="edit_type" required onchange="showEditFields()" class="form-control">
-                    <option value="">-- User Type --</option>
-                    <option value="Admin">Admin</option>
-                    <option value="Faculty">Faculty</option>
-                    <option value="College">College</option>
-                    <option value="BasicEd">Basic Education</option>
-                </select>
-            </div>
-            <div id="edit_admin_fields" style="display:none; margin-top:10px;">
-                <label for="edit_admin_dept">Department</label>
-                <input type="text" name="edit_admin_dept" id="edit_admin_dept" class="form-control">
-            </div>
-            <div id="edit_faculty_fields" style="display:none; margin-top:10px;">
-                <label for="edit_faculty_dept">Department / Program</label>
-                <input type="text" name="edit_faculty_dept" id="edit_faculty_dept" class="form-control">
-            </div>
-            <div id="edit_basiced_fields" style="display:none; margin-top:10px;">
-                <label for="edit_grade_level">Grade Level</label>
-                <select name="edit_grade_level" id="edit_grade_level" class="form-control">
-                    <option value="">-- Grade Level --</option>
-                    <?php for($i=1;$i<=12;$i++): ?>
-                        <option value="Grade <?= $i ?>">Grade <?= $i ?></option>
-                    <?php endfor; ?>
-                </select>
-            </div>
-            <button type="submit" class="btn-primary">Save Changes</button>
-        </form>
-        <?php
-        // Handle Edit Student POST
-        if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['edit_student_id'])) {
-            $student_id = trim($_POST['edit_student_id']);
-            $type = trim($_POST['edit_type']);
-            $lastname = trim($_POST['lastname']);
-            $firstname = trim($_POST['firstname']);
-            $middlename = trim($_POST['middlename']);
-            $department = isset($_POST['edit_admin_dept']) ? trim($_POST['edit_admin_dept']) : (isset($_POST['edit_faculty_dept']) ? trim($_POST['edit_faculty_dept']) : null);
-            $program = isset($_POST['edit_faculty_dept']) ? trim($_POST['edit_faculty_dept']) : null;
-            $course = isset($_POST['course']) ? trim($_POST['course']) : null;
-            $year_level = isset($_POST['year_level']) ? intval($_POST['year_level']) : null;
-            $grade_level = isset($_POST['edit_grade_level']) ? trim($_POST['edit_grade_level']) : null;
-            $stmt_edit = $conn->prepare("UPDATE students SET type=?, lastname=?, firstname=?, middlename=?, department=?, program=?, course=?, year_level=?, grade_level=? WHERE student_id=?");
-            $stmt_edit->bind_param("ssssssssss", $type, $lastname, $firstname, $middlename, $department, $program, $course, $year_level, $grade_level, $student_id);
-            if ($stmt_edit->execute()) {
-                echo "<script>window.location.href=window.location.pathname+'?updated=1';</script>";
-            } else {
-                echo "<p style='color:red;'>Error updating student.</p>";
-            }
-            $stmt_edit->close();
-        }
-        ?>
-    </div>
+  <div class="modal-content" style="width:500px;">
+    <span class="close" id="closeEditModalBtn">&times;</span>
+    <h3>Edit Student</h3>
+    <form method="post" action="">
+      <input type="hidden" id="edit_student_id" name="edit_student_id">
+      <div class="form-group">
+        <label for="edit_lastname">Last Name</label>
+        <input type="text" id="edit_lastname" name="edit_lastname" required>
+      </div>
+      <div class="form-group">
+        <label for="edit_firstname">First Name</label>
+        <input type="text" id="edit_firstname" name="edit_firstname" required>
+      </div>
+      <div class="form-group">
+        <label for="edit_middlename">Middle Name</label>
+        <input type="text" id="edit_middlename" name="edit_middlename">
+      </div>
+      <div class="form-group">
+        <label for="edit_type"><strong>User Type</strong></label>
+        <select id="edit_type" name="edit_type" required onchange="showEditFields()" class="form-control">
+          <option value="">-- User Type --</option>
+          <option value="Admin">Admin</option>
+          <option value="Faculty">Faculty</option>
+          <option value="College">College</option>
+          <option value="BasicEd">Basic Education</option>
+        </select>
+      </div>
+      <div id="edit_admin_fields" style="display:none; margin-top:10px;">
+        <label for="edit_admin_dept">Department</label>
+        <input type="text" name="edit_admin_dept" id="edit_admin_dept" class="form-control">
+      </div>
+      <div id="edit_faculty_fields" style="display:none; margin-top:10px;">
+        <label for="edit_faculty_dept">Department / Program</label>
+        <input type="text" name="edit_faculty_dept" id="edit_faculty_dept" class="form-control">
+      </div>
+      <div id="edit_college_fields" style="display:none; margin-top:10px;">
+        <label for="edit_course">Course</label>
+        <select name="edit_course" id="edit_course">
+          <option value="">Select Course</option>
+          <option value="BEED-GEN">BEED-GEN</option>
+          <option value="BSA">BSA</option>
+          <option value="BSAIS">BSAIS</option>
+          <option value="BSBA-MM">BSBA-MM</option>
+          <option value="BSCRIM">BSCRIM</option>
+          <option value="BSED-ENG">BSED-ENG</option>
+          <option value="BSED-FIL">BSED-FIL</option>
+          <option value="BSED-MATH">BSED-MATH</option>
+          <option value="BSHM">BSHM</option>
+          <option value="BSIT">BSIT</option>
+          <option value="BSPSY">BSPSY</option>
+          <option value="BSTM">BSTM</option>
+          <option value="BPED">BPED</option>
+        </select>
+        <label for="edit_year_level" style="margin-top:5px;">Year Level</label>
+        <select name="edit_year_level" id="edit_year_level" class="form-control">
+          <option value="">-- Year Level --</option>
+          <option value="1">1st Year</option>
+          <option value="2">2nd Year</option>
+          <option value="3">3rd Year</option>
+          <option value="4">4th Year</option>
+        </select>
+      </div>
+      <div id="edit_basiced_fields" style="display:none; margin-top:10px;">
+        <label for="edit_grade_level">Grade Level</label>
+        <select name="edit_grade_level" id="edit_grade_level" class="form-control">
+          <option value="">-- Grade Level --</option>
+          <?php for($i=1;$i<=12;$i++): ?>
+            <option value="Grade <?= $i ?>">Grade <?= $i ?></option>
+          <?php endfor; ?>
+        </select>
+      </div>
+      <button type="submit" name="save_edit" class="btn-primary">Save Changes</button>
+    </form>
+  </div>
 </div>
 
 <script>
@@ -382,7 +372,7 @@ function toggleOrder($currentOrder) {
         document.getElementById('edit_year_level').value = student.year_level || '';
         document.getElementById('edit_grade_level').value = student.grade_level || '';
         showEditFields();
-        editModal.style.display = 'block';
+        document.getElementById('editStudentModal').style.display = 'block';
     }
 
     // Show/hide fields based on student type
@@ -403,6 +393,33 @@ function toggleOrder($currentOrder) {
     }
 </script>
 <?php
+// Handle Edit Student POST
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_edit'])) {
+    $student_id = $_POST['edit_student_id'];
+    $lastname = trim($_POST['edit_lastname']);
+    $firstname = trim($_POST['edit_firstname']);
+    $middlename = trim($_POST['edit_middlename']);
+    $type = $_POST['edit_type'];
+
+    // Optional fields
+    $department = isset($_POST['edit_admin_dept']) ? trim($_POST['edit_admin_dept']) : '';
+    $program = isset($_POST['edit_faculty_dept']) ? trim($_POST['edit_faculty_dept']) : '';
+    $course = isset($_POST['edit_course']) ? trim($_POST['edit_course']) : '';
+    $year_level = isset($_POST['edit_year_level']) ? trim($_POST['edit_year_level']) : '';
+    $grade_level = isset($_POST['edit_grade_level']) ? trim($_POST['edit_grade_level']) : '';
+
+    $stmt = $conn->prepare("UPDATE students SET lastname=?, firstname=?, middlename=?, type=?, department=?, program=?, course=?, year_level=?, grade_level=? WHERE student_id=?");
+    $stmt->bind_param("ssssssssss", $lastname, $firstname, $middlename, $type, $department, $program, $course, $year_level, $grade_level, $student_id);
+
+    if ($stmt->execute()) {
+        echo "<script>window.location.href=window.location.pathname+'?edit_success=1';</script>";
+        exit;
+    } else {
+        echo "<div class='alert alert-error'>Failed to update student.</div>";
+    }
+    $stmt->close();
+}
+
 include '../includes/footer.php';
 $stmt->close();
 $conn->close();

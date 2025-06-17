@@ -44,6 +44,22 @@ function toggleOrder($currentOrder) {
     return $currentOrder === 'asc' ? 'desc' : 'asc';
 }
 ?>
+<style>
+    th a,
+    th a:visited,
+    th a:active {
+        color: rgb(255, 255, 255) !important;
+        text-decoration: none;
+        cursor: pointer;
+        padding: 0.5em 0.2em;
+        border-radius: 2px;
+        font-weight: bold;
+    }
+    th a:hover {
+        background: #f5eaea !important;
+        color: #a83232;
+    }
+</style>
 
 <h1>Books Inventory</h1>
 
@@ -91,8 +107,9 @@ function toggleOrder($currentOrder) {
                     }
                 ?>
             </td>
-            <td>
+            <td style="display: flex; gap: 5px;">
                 <button class="btn btn-secondary" onclick='openEditBookModal(<?= json_encode($row) ?>)'>Edit</button>
+                <a href="book_profile.php?book_id=<?= $row['book_id'] ?>" class="btn btn-primary">View Profile</a>
             </td>
         </tr>
         <?php endwhile; ?>
