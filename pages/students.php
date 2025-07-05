@@ -3,7 +3,9 @@ ini_set('display_errors', 1);
 error_reporting(E_ALL);
 require_once '../includes/header.php';
 require_once '../includes/db.php';
-include_once('../includes/phpqrcode/qrlib.php');
+
+// Fix QR library include path
+require_once('../includes/phpqrcode/qrlib.php');
 
 // --- Search, Sort, Pagination ---
 $search = isset($_GET['search']) ? trim($_GET['search']) : '';
@@ -235,23 +237,32 @@ function toggleOrder($currentOrder) {
                     if ($stmt_add->execute()) {
                         // Generate QR code after successful insert
                         $qr_data = $student_id; // Use the student_id as QR data
-                        // Ensure directory exists
+                        
+                        // Ensure directory exists with proper permissions
                         $qr_dir = '../assets/qrcodes/';
                         if (!is_dir($qr_dir)) {
-                            mkdir($qr_dir, 0777, true);
+                            mkdir($qr_dir, 0755, true);
                         }
+                        
                         // Save as just the filename for DB, but full path for file
                         $qr_filename = $student_id . '.png';
                         $qr_file = $qr_dir . $qr_filename;
-                        // Generate QR code
-                        QRcode::png($qr_data, $qr_file, QR_ECLEVEL_L, 6);
-                        // Save relative path to DB (for web access)
-                        $qr_path_db = 'assets/qrcodes/' . $qr_filename;
-                        $stmt_addqrpath = $conn->prepare("UPDATE students SET qr_path=? WHERE student_id=?");
-                        $stmt_addqrpath->bind_param("ss", $qr_path_db, $student_id);
-                        $stmt_addqrpath->execute();
-                        $stmt_addqrpath->close();
-                        echo "<script>window.location.href=window.location.pathname+'?success=1';</script>";
+                        
+                        try {
+                            // Generate QR code with error handling
+                            QRcode::png($qr_data, $qr_file, QR_ECLEVEL_L, 6, 2);
+                            
+                            // Save relative path to DB (for web access)
+                            $qr_path_db = 'assets/qrcodes/' . $qr_filename;
+                            $stmt_addqrpath = $conn->prepare("UPDATE students SET qr_path=? WHERE student_id=?");
+                            $stmt_addqrpath->bind_param("ss", $qr_path_db, $student_id);
+                            $stmt_addqrpath->execute();
+                            $stmt_addqrpath->close();
+                            
+                            echo "<script>window.location.href=window.location.pathname+'?success=1';</script>";
+                        } catch (Exception $e) {
+                            echo "<p style='color:red;'>Student added but QR generation failed: " . $e->getMessage() . "</p>";
+                        }
                     } else {
                         echo "<p style='color:red;'>Error adding student.</p>";
                     }
