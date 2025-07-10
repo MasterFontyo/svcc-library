@@ -10,6 +10,7 @@ date_default_timezone_set('Asia/Manila');
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SVCC Library Scanner</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <style>
         html, body {
             height: 100%;
@@ -126,6 +127,57 @@ date_default_timezone_set('Asia/Manila');
         #reader__scan_region {
             border: 3px solid #fff !important;
         }
+        
+        /* Admin Manual Entry Styles */
+        .admin-controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+        
+        .btn-admin {
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-admin:hover {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.8);
+            color: #fff;
+            transform: translateY(-2px);
+        }
+        
+        .modal-content {
+            border-radius: 12px;
+            border: none;
+        }
+        
+        .modal-header {
+            background: linear-gradient(135deg, #800000, #b22222);
+            color: white;
+            border-radius: 12px 12px 0 0;
+        }
+        
+        .form-control:focus {
+            border-color: #800000;
+            box-shadow: 0 0 0 0.2rem rgba(128, 0, 0, 0.25);
+        }
+        
+        .btn-maroon {
+            background-color: #800000;
+            border-color: #800000;
+            color: white;
+        }
+        
+        .btn-maroon:hover {
+            background-color: #660000;
+            border-color: #660000;
+            color: white;
+        }
     </style>
 </head>
 <body>
@@ -146,6 +198,7 @@ date_default_timezone_set('Asia/Manila');
                     <span>Point your QR code at the camera</span>
                 </div>
                 <div id="result"></div>
+                
             </div>
         </div>
         
@@ -158,6 +211,62 @@ date_default_timezone_set('Asia/Manila');
                 <li>Wait for the green confirmation message</li>
                 <li>Allow camera permissions when prompted</li>
             </ul>
+        </div>
+        <!-- Admin Manual Entry Button -->
+        <div class="admin-controls">
+            <button type="button" class="btn btn-admin" data-bs-toggle="modal" data-bs-target="#adminModal">
+                🔐 Admin Manual Entry
+            </button>
+        </div>
+    </div>
+
+    <!-- Admin Password Modal -->
+    <div class="modal fade" id="adminModal" tabindex="-1" aria-labelledby="adminModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="adminModalLabel">
+                        <i class="bi bi-shield-lock"></i> Admin Verification
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div id="password-step">
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> Enter your admin password to access manual entry.
+                        </div>
+                        <div class="mb-3">
+                            <label for="adminPassword" class="form-label">Admin Password</label>
+                            <input type="password" class="form-control" id="adminPassword" placeholder="Enter admin password">
+                            <div class="invalid-feedback" id="passwordError"></div>
+                        </div>
+                        <div class="d-grid">
+                            <button type="button" class="btn btn-maroon" onclick="verifyAdminPassword()">
+                                <i class="bi bi-unlock"></i> Verify Password
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div id="manual-entry-step" style="display: none;">
+                        <div class="alert alert-success">
+                            <i class="bi bi-check-circle"></i> Admin verified! Enter student number manually.
+                        </div>
+                        <div class="mb-3">
+                            <label for="studentNumber" class="form-label">Student Number</label>
+                            <input type="text" class="form-control" id="studentNumber" placeholder="Enter student number (e.g., AY2025-12345)">
+                            <div class="invalid-feedback" id="studentNumberError"></div>
+                        </div>
+                        <div class="d-grid gap-2">
+                            <button type="button" class="btn btn-maroon" onclick="processManualEntry()">
+                                <i class="bi bi-person-check"></i> Process Entry
+                            </button>
+                            <button type="button" class="btn btn-secondary" onclick="resetModal()">
+                                <i class="bi bi-arrow-left"></i> Back to Password
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -180,8 +289,171 @@ date_default_timezone_set('Asia/Manila');
             timeDiv.innerHTML = now.toLocaleString('en-US', options) + " (Asia/Manila)";
         }
         setInterval(updateTime, 1000);
+        
+        // Admin Modal Functions
+        function verifyAdminPassword() {
+            const password = document.getElementById('adminPassword').value;
+            const passwordInput = document.getElementById('adminPassword');
+            const errorDiv = document.getElementById('passwordError');
+            
+            if (!password) {
+                passwordInput.classList.add('is-invalid');
+                errorDiv.textContent = 'Password is required.';
+                return;
+            }
+            
+            // Clear previous errors
+            passwordInput.classList.remove('is-invalid');
+            errorDiv.textContent = '';
+            
+            // Send AJAX request to verify password
+            fetch('verify_admin_password.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    password: password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Password is correct, show manual entry step
+                    document.getElementById('password-step').style.display = 'none';
+                    document.getElementById('manual-entry-step').style.display = 'block';
+                    document.getElementById('studentNumber').focus();
+                } else {
+                    // Password is incorrect
+                    passwordInput.classList.add('is-invalid');
+                    errorDiv.textContent = data.message || 'Invalid password.';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                passwordInput.classList.add('is-invalid');
+                errorDiv.textContent = 'An error occurred. Please try again.';
+            });
+        }
+        
+        function processManualEntry() {
+            const studentNumber = document.getElementById('studentNumber').value.trim();
+            const studentInput = document.getElementById('studentNumber');
+            const errorDiv = document.getElementById('studentNumberError');
+            
+            if (!studentNumber) {
+                studentInput.classList.add('is-invalid');
+                errorDiv.textContent = 'Student number is required.';
+                return;
+            }
+            
+            // Clear previous errors
+            studentInput.classList.remove('is-invalid');
+            errorDiv.textContent = '';
+            
+            // Disable the button and show processing
+            const processBtn = event.target;
+            const originalText = processBtn.innerHTML;
+            processBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Processing...';
+            processBtn.disabled = true;
+            
+            // Send to scan_process.php (same as QR scan)
+            fetch('scan_process.php', {
+                method: 'POST',
+                headers: { 
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: 'student_id=' + encodeURIComponent(studentNumber)
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Close modal first
+                const modal = bootstrap.Modal.getInstance(document.getElementById('adminModal'));
+                modal.hide();
+                
+                // Show result in main page
+                if (data.status === 'in') {
+                    let message = "✅ Manual Entry - Welcome, " + data.name + "!<br> Time In: " + data.time;
+                    if (data.type) {
+                        message += "<br>👤 Type: " + data.type;
+                    }
+                    showMessage(message, "#388e3c", "#e8f5e9");
+                    updateScannerStatus("✅ Manual entry successful - Time In recorded");
+                } else if (data.status === 'out') {
+                    let message = "✅ Manual Entry - 👋 Goodbye, " + data.name + "!<br> Time Out: " + data.time;
+                    if (data.auto) {
+                        message += "<br>🕐 " + data.message;
+                    }
+                    showMessage(message, "#1976d2", "#e3f2fd");
+                    updateScannerStatus("✅ Manual entry successful - Time Out recorded");
+                } else {
+                    showMessage("❌ " + data.message, "#e63946", "#ffebee");
+                    updateScannerStatus("❌ Manual entry failed - " + data.message);
+                }
+                
+                // Reset modal after successful processing
+                setTimeout(() => {
+                    resetModal();
+                }, 1000);
+            })
+            .catch(error => {
+                console.error('Manual entry error:', error);
+                studentInput.classList.add('is-invalid');
+                errorDiv.textContent = 'Network error. Please try again.';
+            })
+            .finally(() => {
+                // Reset button state
+                processBtn.innerHTML = originalText;
+                processBtn.disabled = false;
+            });
+        }
+        
+        function resetModal() {
+            // Reset to password step
+            document.getElementById('password-step').style.display = 'block';
+            document.getElementById('manual-entry-step').style.display = 'none';
+            
+            // Clear all inputs
+            document.getElementById('adminPassword').value = '';
+            document.getElementById('studentNumber').value = '';
+            
+            // Clear all error states
+            document.getElementById('adminPassword').classList.remove('is-invalid');
+            document.getElementById('studentNumber').classList.remove('is-invalid');
+            document.getElementById('passwordError').textContent = '';
+            document.getElementById('studentNumberError').textContent = '';
+        }
+        
+        // Handle Enter key in password field
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    verifyAdminPassword();
+                }
+            });
+            
+            document.getElementById('studentNumber').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    processManualEntry();
+                }
+            });
+            
+            // Reset modal when it's closed
+            document.getElementById('adminModal').addEventListener('hidden.bs.modal', function() {
+                resetModal();
+            });
+        });
     </script>
 
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
     <script>
         let resultTimeout = null;
