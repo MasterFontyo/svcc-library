@@ -138,6 +138,23 @@ CREATE TABLE `students` (
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `library_events`
+--
+
+CREATE TABLE `library_events` (
+  `event_id` int(11) NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `description` text DEFAULT NULL,
+  `event_date` date NOT NULL,
+  `event_time` time DEFAULT NULL,
+  `created_by` int(11) DEFAULT NULL,
+  `created_at` datetime DEFAULT current_timestamp(),
+  `updated_at` datetime DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `users`
 --
 
@@ -183,6 +200,14 @@ ALTER TABLE `borrowed_books`
 ALTER TABLE `csv_imports`
   ADD PRIMARY KEY (`import_id`),
   ADD KEY `uploaded_by` (`uploaded_by`);
+
+--
+-- Indexes for table `library_events`
+--
+ALTER TABLE `library_events`
+  ADD PRIMARY KEY (`event_id`),
+  ADD KEY `created_by` (`created_by`),
+  ADD KEY `event_date` (`event_date`);
 
 --
 -- Indexes for table `library_log`
@@ -239,6 +264,12 @@ ALTER TABLE `csv_imports`
   MODIFY `import_id` int(11) NOT NULL AUTO_INCREMENT;
 
 --
+-- AUTO_INCREMENT for table `library_events`
+--
+ALTER TABLE `library_events`
+  MODIFY `event_id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `library_log`
 --
 ALTER TABLE `library_log`
@@ -265,6 +296,12 @@ ALTER TABLE `activity_logs`
 --
 ALTER TABLE `csv_imports`
   ADD CONSTRAINT `csv_imports_ibfk_1` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `library_events`
+--
+ALTER TABLE `library_events`
+  ADD CONSTRAINT `library_events_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`user_id`) ON DELETE SET NULL;
 
 --
 -- Constraints for table `library_log`
