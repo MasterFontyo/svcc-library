@@ -50,6 +50,18 @@ if ($student_id) {
       <?php endif; ?>
     </div>
   </div>
+
+  <!-- Print ID Card Button -->
+  <a 
+    href="print_lib_card.php?student_id=<?= urlencode($student['student_id']) ?>" 
+    target="_blank" 
+    class="btn btn-primary" 
+    style="margin-bottom:16px;"
+  >
+    Print Library Card
+  </a>
+
+  
   <h3>Borrowed Books</h3>
   <table>
     <thead>
@@ -78,15 +90,7 @@ if ($student_id) {
     </tbody>
   </table>
 
-  <!-- Print ID Card Button -->
-  <a 
-    href="print_lib_card.php?student_id=<?= urlencode($student['student_id']) ?>" 
-    target="_blank" 
-    class="btn btn-primary" 
-    style="margin-bottom:16px;"
-  >
-    Print Library Card
-  </a>
+  
 
   <?php
   // Fetch attendance records
