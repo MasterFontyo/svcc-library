@@ -119,7 +119,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
       </option>
     <?php endwhile; ?>
   </select>
-
+  <br><br>
   <button type="submit" class="btn" id="borrow_btn">Borrow</button>
   <a href="borrowed_records.php" class="btn btn-secondary">View Borrowed List</a>
 </form>

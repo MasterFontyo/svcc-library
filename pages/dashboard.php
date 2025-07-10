@@ -25,8 +25,8 @@ $stats['borrowed_today'] = $result->fetch_assoc()['total'];
 $result = $conn->query("SELECT COUNT(*) as total FROM borrowed_books WHERE status = 'borrowed'");
 $stats['currently_borrowed'] = $result->fetch_assoc()['total'];
 
-// Overdue Books (assuming 7 days borrowing period)
-$result = $conn->query("SELECT COUNT(*) as total FROM borrowed_books WHERE status = 'borrowed' AND DATE(borrow_date) < DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
+// Overdue Books (assuming 3 days borrowing period)
+$result = $conn->query("SELECT COUNT(*) as total FROM borrowed_books WHERE status = 'borrowed' AND DATE(borrow_date) < DATE_SUB(CURDATE(), INTERVAL 3 DAY)");
 $stats['overdue_books'] = $result->fetch_assoc()['total'];
 
 // Get recent activities
@@ -56,7 +56,7 @@ $overdue_details = $conn->query("
     FROM borrowed_books bb 
     JOIN students s ON bb.student_id = s.student_id 
     JOIN books b ON bb.book_id = b.book_id 
-    WHERE bb.status = 'borrowed' AND DATE(bb.borrow_date) < DATE_SUB(CURDATE(), INTERVAL 7 DAY)
+    WHERE bb.status = 'borrowed' AND DATE(bb.borrow_date) < DATE_SUB(CURDATE(), INTERVAL 3 DAY)
     ORDER BY bb.borrow_date ASC
     LIMIT 5
 ")->fetch_all(MYSQLI_ASSOC);

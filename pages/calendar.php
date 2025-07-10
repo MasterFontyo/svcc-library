@@ -2,6 +2,10 @@
 require_once '../includes/header.php';
 require_once '../includes/db.php';
 
+// Get current month and year first (needed for redirects)
+$current_month = isset($_GET['month']) ? intval($_GET['month']) : date('n');
+$current_year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
+
 // Handle form submissions
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (isset($_POST['action'])) {
@@ -40,24 +44,76 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 break;
                 
             case 'delete':
-                $event_id = $_POST['event_id'];
-                
-                $stmt = $conn->prepare("DELETE FROM library_events WHERE event_id = ?");
-                $stmt->bind_param("i", $event_id);
-                
-                if ($stmt->execute()) {
-                    $success = "Event deleted successfully!";
+                if (isset($_POST['event_id']) && !empty($_POST['event_id'])) {
+                    $event_id = intval($_POST['event_id']);
+                    
+                    // Log the deletion attempt
+                    error_log("CALENDAR DEBUG: Attempting to delete event ID: " . $event_id . " at " . date('Y-m-d H:i:s'));
+                    
+                    // First check if the event exists
+                    $check_stmt = $conn->prepare("SELECT event_id, title FROM library_events WHERE event_id = ?");
+                    $check_stmt->bind_param("i", $event_id);
+                    $check_stmt->execute();
+                    $check_result = $check_stmt->get_result();
+                    
+                    if ($check_result->num_rows > 0) {
+                        $event_data = $check_result->fetch_assoc();
+                        error_log("CALENDAR DEBUG: Found event to delete: " . $event_data['title']);
+                        
+                        // Delete the specific event
+                        $stmt = $conn->prepare("DELETE FROM library_events WHERE event_id = ? LIMIT 1");
+                        $stmt->bind_param("i", $event_id);
+                        
+                        if ($stmt->execute()) {
+                            $affected_rows = $stmt->affected_rows;
+                            error_log("CALENDAR DEBUG: Delete executed. Affected rows: " . $affected_rows);
+                            
+                            if ($affected_rows > 0) {
+                                $success = "Event '" . htmlspecialchars($event_data['title']) . "' deleted successfully!";
+                                error_log("CALENDAR DEBUG: SUCCESS - Event deleted");
+                            } else {
+                                $error = "Failed to delete event. No rows affected.";
+                                error_log("CALENDAR DEBUG: ERROR - No rows affected");
+                            }
+                        } else {
+                            $error = "Error deleting event: " . $conn->error;
+                            error_log("CALENDAR DEBUG: ERROR - " . $conn->error);
+                        }
+                    } else {
+                        $error = "Event not found or already deleted.";
+                        error_log("CALENDAR DEBUG: ERROR - Event not found: " . $event_id);
+                    }
+                    
+                    $check_stmt->close();
+                    if (isset($stmt)) {
+                        $stmt->close();
+                    }
                 } else {
-                    $error = "Error deleting event: " . $conn->error;
+                    $error = "Invalid event ID.";
+                    error_log("CALENDAR DEBUG: ERROR - Invalid event ID: " . print_r($_POST, true));
                 }
                 break;
         }
+        
+        // Redirect to prevent form resubmission
+        $redirect_url = "calendar.php?month=" . $current_month . "&year=" . $current_year;
+        if (isset($success)) {
+            $redirect_url .= "&success=" . urlencode($success);
+        } elseif (isset($error)) {
+            $redirect_url .= "&error=" . urlencode($error);
+        }
+        header("Location: " . $redirect_url);
+        exit();
     }
 }
 
-// Get current month and year
-$current_month = isset($_GET['month']) ? intval($_GET['month']) : date('n');
-$current_year = isset($_GET['year']) ? intval($_GET['year']) : date('Y');
+// Handle success/error messages from redirect
+if (isset($_GET['success'])) {
+    $success = $_GET['success'];
+}
+if (isset($_GET['error'])) {
+    $error = $_GET['error'];
+}
 
 // Calculate previous and next month/year
 $prev_month = $current_month - 1;
@@ -358,7 +414,7 @@ $month_name = date('F Y', $first_day);
                         <p class="text-muted text-center py-4">No events scheduled for this month.</p>
                     <?php else: ?>
                         <div class="table-responsive">
-                            <table class="table table-hover">
+                            <table class="table table-hover calendar-events-table">
                                 <thead>
                                     <tr>
                                         <th>Date</th>
@@ -375,16 +431,19 @@ $month_name = date('F Y', $first_day);
                                             <td><?= $event['event_time'] ? date('g:i A', strtotime($event['event_time'])) : 'All Day' ?></td>
                                             <td><strong><?= htmlspecialchars($event['title']) ?></strong></td>
                                             <td><?= htmlspecialchars($event['description']) ?></td>
-                                            <td>
-                                                <button type="button" class="btn btn-sm btn-outline-primary me-1 edit-event-btn" 
+                                            <td class="actions-cell">
+                                                <button type="button" class="btn btn-sm edit-event-btn" 
                                                         data-event='<?= json_encode($event) ?>'>
                                                     <i class="bi bi-pencil"></i> Edit
                                                 </button>
-                                                <form method="POST" style="display: inline;">
+                                                <form method="POST" class="delete-form calendar-delete-form d-inline-block" 
+                                                      data-event-id="<?= $event['event_id'] ?>">
                                                     <input type="hidden" name="action" value="delete">
-                                                    <input type="hidden" name="event_id" value="<?= $event['event_id'] ?>">
-                                                    <button type="submit" class="btn btn-sm btn-outline-danger" 
-                                                            onclick="return confirm('Are you sure you want to delete this event?')">
+                                                    <input type="hidden" name="event_id" value="<?= intval($event['event_id']) ?>">
+                                                    <button type="submit" class="btn btn-sm delete-btn" 
+                                                            data-event-title="<?= htmlspecialchars($event['title']) ?>"
+                                                            data-event-id="<?= $event['event_id'] ?>"
+                                                            onclick="return confirmDelete(this, <?= $event['event_id'] ?>)">
                                                         <i class="bi bi-trash"></i> Delete
                                                     </button>
                                                 </form>
@@ -562,6 +621,36 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     });
 });
+
+// Delete confirmation function
+function confirmDelete(button, eventId) {
+    // Prevent multiple clicks
+    if (button.disabled) {
+        return false;
+    }
+    
+    const eventTitle = button.getAttribute('data-event-title');
+    const confirmMessage = `Are you sure you want to delete the event "${eventTitle}"?\n\nEvent ID: ${eventId}\n\nThis action cannot be undone.`;
+    
+    if (confirm(confirmMessage)) {
+        // Disable the button to prevent double-clicking
+        button.disabled = true;
+        button.innerHTML = '<i class="bi bi-hourglass-split"></i> Deleting...';
+        
+        // Disable all other delete buttons to prevent confusion
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            if (btn !== button) {
+                btn.disabled = true;
+            }
+        });
+        
+        // Submit the form directly
+        button.closest('form').submit();
+        
+        return false; // Prevent default form submission
+    }
+    return false;
+}
 </script>
 
 <?php require_once '../includes/footer.php'; ?>

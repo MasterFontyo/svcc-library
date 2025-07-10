@@ -500,3 +500,428 @@ a:hover {
 .event-badge.upcoming {
   background: #28a745;
 }
+
+/* Borrowed Records Page Styles */
+.borrowed-records-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+  padding: 20px 0;
+  border-bottom: 2px solid #e9ecef;
+}
+
+.header-left .btn-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #6c757d;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.header-left .btn-back:hover {
+  background: #5a6268;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.header-center h2 {
+  margin: 0;
+  color: #800000;
+  font-size: 28px;
+  font-weight: 600;
+}
+
+.header-right .last-updated {
+  color: #6c757d;
+  font-size: 14px;
+  font-style: italic;
+}
+
+/* Statistics Cards */
+.borrowed-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 20px;
+  margin-bottom: 30px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+}
+
+.stat-icon {
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+}
+
+.stat-card.total .stat-icon {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+}
+
+.stat-card.overdue .stat-icon {
+  background: linear-gradient(135deg, #dc3545, #c82333);
+}
+
+.stat-card.due-today .stat-icon {
+  background: linear-gradient(135deg, #ffc107, #e0a800);
+}
+
+.stat-card.average .stat-icon {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+}
+
+.stat-content h3 {
+  margin: 0 0 5px 0;
+  font-size: 32px;
+  font-weight: 700;
+  color: #333;
+}
+
+.stat-content p {
+  margin: 0;
+  color: #6c757d;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+/* Table Container */
+.table-container {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.borrowed-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0;
+}
+
+.borrowed-table thead {
+  background: linear-gradient(135deg, #800000, #a83232);
+}
+
+.borrowed-table th {
+  padding: 15px 12px;
+  text-align: left;
+  font-weight: 600;
+  color: white;
+  font-size: 14px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.borrowed-table td {
+  padding: 15px 12px;
+  border-bottom: 1px solid #e9ecef;
+  vertical-align: top;
+}
+
+.record-row {
+  transition: background-color 0.3s ease;
+}
+
+.record-row:hover {
+  background: #f8f9fa;
+}
+
+.record-row.overdue {
+  background: rgba(220, 53, 69, 0.05);
+  border-left: 4px solid #dc3545;
+}
+
+.record-row.due_today {
+  background: rgba(255, 193, 7, 0.05);
+  border-left: 4px solid #ffc107;
+}
+
+.record-row.active {
+  background: rgba(40, 167, 69, 0.05);
+  border-left: 4px solid #28a745;
+}
+
+/* Table Cell Specific Styles */
+.record-id {
+  font-weight: 600;
+  color: #800000;
+  font-size: 16px;
+}
+
+.book-details {
+  max-width: 250px;
+}
+
+.book-title {
+  font-weight: 600;
+  color: #333;
+  font-size: 15px;
+  margin-bottom: 4px;
+  line-height: 1.3;
+}
+
+.book-author {
+  color: #6c757d;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.borrower-info {
+  min-width: 150px;
+}
+
+.borrower-name {
+  font-weight: 600;
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.borrower-id {
+  color: #6c757d;
+  font-size: 12px;
+}
+
+.borrow-date {
+  font-weight: 500;
+  color: #495057;
+  font-size: 14px;
+}
+
+.days-borrowed {
+  text-align: center;
+  min-width: 120px;
+}
+
+.days-count {
+  font-size: 20px;
+  font-weight: 700;
+  color: #333;
+  display: block;
+}
+
+.days-label {
+  font-size: 12px;
+  color: #6c757d;
+  display: block;
+  margin-bottom: 4px;
+}
+
+.overdue-badge {
+  background: #dc3545;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.due-badge {
+  background: #ffc107;
+  color: #212529;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 600;
+  display: inline-block;
+  margin-top: 4px;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.status-badge.overdue {
+  background: #dc3545;
+  color: white;
+}
+
+.status-badge.due_today {
+  background: #ffc107;
+  color: #212529;
+}
+
+.status-badge.active {
+  background: #28a745;
+  color: white;
+}
+
+.actions {
+  text-align: center;
+}
+
+.btn-return {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: #17a2b8;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 6px;
+  text-decoration: none;
+  font-size: 12px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-return:hover {
+  background: #138496;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Empty State */
+.no-records {
+  text-align: center;
+  padding: 60px 20px;
+}
+
+.empty-state {
+  color: #6c757d;
+}
+
+.empty-state i {
+  font-size: 48px;
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.empty-state h4 {
+  margin: 0 0 10px 0;
+  font-size: 24px;
+  color: #495057;
+}
+
+.empty-state p {
+  margin: 0;
+  font-size: 16px;
+}
+
+/* Calendar Events Table Styles */
+.calendar-events-table .actions-cell {
+  white-space: nowrap;
+  text-align: center;
+}
+
+.calendar-events-table .delete-form {
+  display: inline-block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+.calendar-events-table .delete-form button {
+  border: 1px solid #dc3545 !important;
+  background: transparent !important;
+  color: #dc3545 !important;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  border-radius: 4px !important;
+  transition: all 0.2s ease !important;
+}
+
+.calendar-events-table .delete-form button:hover {
+  background: #dc3545 !important;
+  color: white !important;
+  border-color: #dc3545 !important;
+}
+
+.calendar-events-table .edit-event-btn {
+  border: 1px solid #007bff !important;
+  background: transparent !important;
+  color: #007bff !important;
+  margin-right: 5px !important;
+}
+
+.calendar-events-table .edit-event-btn:hover {
+  background: #007bff !important;
+  color: white !important;
+  border-color: #007bff !important;
+}
+
+/* Calendar event form isolation */
+.calendar-events-table .delete-form input[type="hidden"] {
+    display: none !important;
+}
+
+.calendar-events-table .delete-form {
+    position: relative;
+}
+
+.calendar-events-table .delete-form::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: -1;
+}
+
+/* Ensure each form is isolated */
+.calendar-delete-form {
+    isolation: isolate;
+}
+
+/* Additional button state styles */
+.calendar-events-table .delete-btn:active {
+    transform: scale(0.95);
+}
+
+.calendar-events-table .edit-event-btn:active {
+    transform: scale(0.95);
+}
+
+/* Table responsive fixes */
+@media (max-width: 768px) {
+    .calendar-events-table .actions-cell {
+        width: 120px;
+    }
+    
+    .calendar-events-table .delete-btn,
+    .calendar-events-table .edit-event-btn {
+        padding: 0.2rem 0.4rem !important;
+        font-size: 0.8rem !important;
+    }
+}
