@@ -70,6 +70,66 @@ $monthly_data = $conn->query("
     ORDER BY month
 ")->fetch_all(MYSQLI_ASSOC);
 
+// Get library visit data (attendance data)
+$visit_monthly_data = $conn->query("
+    SELECT DATE_FORMAT(time_in, '%Y-%m') as month, COUNT(*) as count 
+    FROM attendance 
+    WHERE time_in >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+    GROUP BY DATE_FORMAT(time_in, '%Y-%m')
+    ORDER BY month
+")->fetch_all(MYSQLI_ASSOC);
+
+// Get daily data for both borrowing and visits
+$daily_borrow_data = $conn->query("
+    SELECT DATE(borrow_date) as day, COUNT(*) as count 
+    FROM borrowed_books 
+    WHERE borrow_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    GROUP BY DATE(borrow_date)
+    ORDER BY day
+")->fetch_all(MYSQLI_ASSOC);
+
+$daily_visit_data = $conn->query("
+    SELECT DATE(time_in) as day, COUNT(*) as count 
+    FROM attendance 
+    WHERE time_in >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+    GROUP BY DATE(time_in)
+    ORDER BY day
+")->fetch_all(MYSQLI_ASSOC);
+
+// Get weekly data
+$weekly_borrow_data = $conn->query("
+    SELECT YEARWEEK(borrow_date) as week, DATE_SUB(borrow_date, INTERVAL WEEKDAY(borrow_date) DAY) as week_start, COUNT(*) as count 
+    FROM borrowed_books 
+    WHERE borrow_date >= DATE_SUB(CURDATE(), INTERVAL 12 WEEK)
+    GROUP BY YEARWEEK(borrow_date)
+    ORDER BY week
+")->fetch_all(MYSQLI_ASSOC);
+
+$weekly_visit_data = $conn->query("
+    SELECT YEARWEEK(time_in) as week, DATE_SUB(time_in, INTERVAL WEEKDAY(time_in) DAY) as week_start, COUNT(*) as count 
+    FROM attendance 
+    WHERE time_in >= DATE_SUB(CURDATE(), INTERVAL 12 WEEK)
+    GROUP BY YEARWEEK(time_in)
+    ORDER BY week
+")->fetch_all(MYSQLI_ASSOC);
+
+// Get yearly data
+$yearly_borrow_data = $conn->query("
+    SELECT YEAR(borrow_date) as year, COUNT(*) as count 
+    FROM borrowed_books 
+    WHERE borrow_date >= DATE_SUB(CURDATE(), INTERVAL 3 YEAR)
+    GROUP BY YEAR(borrow_date)
+    ORDER BY year
+")->fetch_all(MYSQLI_ASSOC);
+
+$yearly_visit_data = $conn->query("
+    SELECT YEAR(time_in) as year, COUNT(*) as count 
+    FROM attendance 
+    WHERE time_in >= DATE_SUB(CURDATE(), INTERVAL 3 YEAR)
+    GROUP BY YEAR(time_in)
+    ORDER BY year
+")->fetch_all(MYSQLI_ASSOC);
+
 // Get upcoming events (next 7 days)
 $upcoming_events = $conn->query("
     SELECT * FROM library_events 
@@ -496,12 +556,27 @@ foreach ($current_month_events as $event) {
             </div>
         </div>
 
-        <!-- Column 2: Charts & Books -->
+        <!-- Column 2: Charts -->
         <div class="col-lg-4 mb-3">
+            <!-- Chart Controls -->
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-white py-2">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <h6 class="mb-0"><i class="bi bi-graph-up"></i> Analytics</h6>
+                        <div class="btn-group btn-group-sm" role="group">
+                            <button type="button" class="btn btn-outline-primary" data-period="daily" onclick="changePeriod('daily')">Daily</button>
+                            <button type="button" class="btn btn-outline-primary" data-period="weekly" onclick="changePeriod('weekly')">Weekly</button>
+                            <button type="button" class="btn btn-primary active" data-period="monthly" onclick="changePeriod('monthly')">Monthly</button>
+                            <button type="button" class="btn btn-outline-primary" data-period="yearly" onclick="changePeriod('yearly')">Yearly</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Borrowing Trends Chart -->
             <div class="card border-0 shadow-sm compact-card mb-3">
                 <div class="card-header bg-white py-2">
-                    <h6 class="mb-0"><i class="bi bi-graph-up"></i> Borrowing Trends</h6>
+                    <h6 class="mb-0"><i class="bi bi-book"></i> Book Borrowing Trends</h6>
                 </div>
                 <div class="card-body">
                     <div class="chart-container">
@@ -510,8 +585,23 @@ foreach ($current_month_events as $event) {
                 </div>
             </div>
 
-            <!-- Top Borrowed Books -->
+            <!-- Library Visits Chart -->
             <div class="card border-0 shadow-sm compact-card">
+                <div class="card-header bg-white py-2">
+                    <h6 class="mb-0"><i class="bi bi-door-open"></i> Library Visits</h6>
+                </div>
+                <div class="card-body">
+                    <div class="chart-container">
+                        <canvas id="visitsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Column 3: Books, Activity & Overdue -->
+        <div class="col-lg-4 mb-3">
+            <!-- Top Borrowed Books -->
+            <div class="card border-0 shadow-sm compact-card mb-3">
                 <div class="card-header bg-white py-2">
                     <h6 class="mb-0"><i class="bi bi-star"></i> Top Borrowed Books</h6>
                 </div>
@@ -534,10 +624,7 @@ foreach ($current_month_events as $event) {
                     <?php endif; ?>
                 </div>
             </div>
-        </div>
 
-        <!-- Column 3: Activity & Overdue -->
-        <div class="col-lg-4 mb-3">
             <!-- Recent Activity -->
             <div class="card border-0 shadow-sm compact-card mb-3">
                 <div class="card-header bg-white py-2">
@@ -640,24 +727,49 @@ foreach ($current_month_events as $event) {
 </div>
 
 <script>
-// Borrowing Trends Chart
+// Global variables for charts
+let borrowingChart;
+let visitsChart;
+let currentPeriod = 'monthly';
+
+// Chart data arrays
+const chartData = {
+    daily: {
+        borrow: <?= json_encode($daily_borrow_data) ?>,
+        visit: <?= json_encode($daily_visit_data) ?>
+    },
+    weekly: {
+        borrow: <?= json_encode($weekly_borrow_data) ?>,
+        visit: <?= json_encode($weekly_visit_data) ?>
+    },
+    monthly: {
+        borrow: <?= json_encode($monthly_data) ?>,
+        visit: <?= json_encode($visit_monthly_data) ?>
+    },
+    yearly: {
+        borrow: <?= json_encode($yearly_borrow_data) ?>,
+        visit: <?= json_encode($yearly_visit_data) ?>
+    }
+};
+
+// Initialize Charts
 document.addEventListener('DOMContentLoaded', function() {
+    initializeBorrowingChart();
+    initializeVisitsChart();
+    setActivePeriod('monthly');
+    updateCharts('monthly');
+});
+
+function initializeBorrowingChart() {
     const ctx = document.getElementById('borrowingChart').getContext('2d');
     
-    const monthlyData = <?= json_encode($monthly_data) ?>;
-    const labels = monthlyData.map(item => {
-        const date = new Date(item.month + '-01');
-        return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
-    });
-    const data = monthlyData.map(item => item.count);
-    
-    new Chart(ctx, {
+    borrowingChart = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: labels,
+            labels: [],
             datasets: [{
                 label: 'Books Borrowed',
-                data: data,
+                data: [],
                 borderColor: '#007bff',
                 backgroundColor: 'rgba(0, 123, 255, 0.1)',
                 borderWidth: 2,
@@ -670,7 +782,8 @@ document.addEventListener('DOMContentLoaded', function() {
             maintainAspectRatio: false,
             plugins: {
                 legend: {
-                    display: false
+                    display: true,
+                    position: 'top'
                 }
             },
             scales: {
@@ -683,7 +796,142 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         }
     });
-});
+}
+
+function initializeVisitsChart() {
+    const ctx = document.getElementById('visitsChart').getContext('2d');
+    
+    visitsChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: [],
+            datasets: [{
+                label: 'Library Visits',
+                data: [],
+                borderColor: '#28a745',
+                backgroundColor: 'rgba(40, 167, 69, 0.1)',
+                borderWidth: 2,
+                fill: true,
+                tension: 0.4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top'
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        stepSize: 1
+                    }
+                }
+            }
+        }
+    });
+}
+
+function changePeriod(period) {
+    currentPeriod = period;
+    setActivePeriod(period);
+    updateCharts(period);
+}
+
+function setActivePeriod(period) {
+    // Update button states
+    document.querySelectorAll('[data-period]').forEach(btn => {
+        btn.classList.remove('active', 'btn-primary');
+        btn.classList.add('btn-outline-primary');
+    });
+    
+    const activeBtn = document.querySelector(`[data-period="${period}"]`);
+    if (activeBtn) {
+        activeBtn.classList.remove('btn-outline-primary');
+        activeBtn.classList.add('active', 'btn-primary');
+    }
+}
+
+function updateCharts(period) {
+    updateBorrowingChart(period);
+    updateVisitsChart(period);
+}
+
+function updateBorrowingChart(period) {
+    const data = chartData[period].borrow;
+    
+    let labels = [];
+    let values = [];
+    
+    if (data && data.length > 0) {
+        if (period === 'daily') {
+            labels = data.map(item => {
+                const date = new Date(item.day);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            values = data.map(item => item.count);
+        } else if (period === 'weekly') {
+            labels = data.map(item => {
+                const date = new Date(item.week_start);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            values = data.map(item => item.count);
+        } else if (period === 'monthly') {
+            labels = data.map(item => {
+                const date = new Date(item.month + '-01');
+                return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+            });
+            values = data.map(item => item.count);
+        } else if (period === 'yearly') {
+            labels = data.map(item => item.year);
+            values = data.map(item => item.count);
+        }
+    }
+    
+    borrowingChart.data.labels = labels;
+    borrowingChart.data.datasets[0].data = values;
+    borrowingChart.update();
+}
+
+function updateVisitsChart(period) {
+    const data = chartData[period].visit;
+    
+    let labels = [];
+    let values = [];
+    
+    if (data && data.length > 0) {
+        if (period === 'daily') {
+            labels = data.map(item => {
+                const date = new Date(item.day);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            values = data.map(item => item.count);
+        } else if (period === 'weekly') {
+            labels = data.map(item => {
+                const date = new Date(item.week_start);
+                return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            });
+            values = data.map(item => item.count);
+        } else if (period === 'monthly') {
+            labels = data.map(item => {
+                const date = new Date(item.month + '-01');
+                return date.toLocaleDateString('en-US', { month: 'short', year: '2-digit' });
+            });
+            values = data.map(item => item.count);
+        } else if (period === 'yearly') {
+            labels = data.map(item => item.year);
+            values = data.map(item => item.count);
+        }
+    }
+    
+    visitsChart.data.labels = labels;
+    visitsChart.data.datasets[0].data = values;
+    visitsChart.update();
+}
 
 // Auto-refresh dashboard every 5 minutes
 setInterval(function() {
