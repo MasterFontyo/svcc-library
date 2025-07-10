@@ -59,9 +59,11 @@ CREATE TABLE `attendance` (
 
 CREATE TABLE `books` (
   `book_id` int(11) NOT NULL,
+  `isbn` varchar(20) DEFAULT NULL,
+  `copyright` year(4) DEFAULT NULL,
   `ctrl_number` varchar(50) DEFAULT NULL,
-  `title` varchar(255) NOT NULL,
   `author` varchar(255) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
   `publisher` varchar(100) DEFAULT NULL,
   `year_published` year(4) DEFAULT NULL,
   `status` enum('Available','Borrowed') DEFAULT 'Available',
