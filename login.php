@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once 'includes/db.php';
+require_once 'includes/activity_logger.php';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $username = trim($_POST['username']);
@@ -18,14 +19,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $_SESSION['username'] = $user['username'];
                 $_SESSION['role'] = $user['role'];
 
+                // Log successful login
+                logLogin($conn, $user['user_id'], $user['username']);
+
                 // Redirect to dashboard
                 header("Location: pages/dashboard.php");
                 exit();
             } else {
                 $_SESSION['error'] = "Invalid password.";
+                // Log failed login attempt
+                logActivity($conn, null, "Failed login attempt for username: " . $username);
             }
         } else {
             $_SESSION['error'] = "User not found.";
+            // Log failed login attempt
+            logActivity($conn, null, "Failed login attempt for unknown username: " . $username);
         }
     } else {
         $_SESSION['error'] = "Please enter both username and password.";

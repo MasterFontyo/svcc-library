@@ -913,15 +913,266 @@ a:hover {
     transform: scale(0.95);
 }
 
-/* Table responsive fixes */
+/* Activity Log Page Styles */
+.activity-log-container {
+    background: #f8f9fa;
+    min-height: 100vh;
+    padding: 20px 0;
+}
+
+.activity-stats-card {
+    transition: transform 0.2s ease-in-out;
+    border: none;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.activity-stats-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+}
+
+.activity-badge {
+    font-size: 0.75rem;
+    padding: 0.375rem 0.75rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+}
+
+.activity-badge i {
+    font-size: 0.875rem;
+}
+
+.activity-table {
+    background: white;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.activity-table .table th {
+    background: #f8f9fa;
+    border-bottom: 2px solid #dee2e6;
+    font-weight: 600;
+    color: #495057;
+    padding: 1rem 0.75rem;
+}
+
+.activity-table .table td {
+    padding: 0.75rem;
+    vertical-align: middle;
+    border-bottom: 1px solid #f1f3f4;
+}
+
+.activity-table .table tbody tr:hover {
+    background: #f8f9fa;
+}
+
+.activity-user-info {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.activity-user-name {
+    font-weight: 600;
+    color: #212529;
+}
+
+.activity-username {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.activity-timestamp {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+}
+
+.activity-date {
+    font-weight: 500;
+    color: #212529;
+}
+
+.activity-time {
+    font-size: 0.875rem;
+    color: #6c757d;
+}
+
+.activity-time-ago {
+    font-size: 0.875rem;
+    color: #6c757d;
+    font-style: italic;
+}
+
+.activity-filters {
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    margin-bottom: 1.5rem;
+}
+
+.activity-filters .card-header {
+    background: #f8f9fa;
+    border-bottom: 1px solid #dee2e6;
+    padding: 1rem 1.25rem;
+}
+
+.activity-filters .form-control,
+.activity-filters .form-select {
+    border-radius: 0.375rem;
+    border: 1px solid #ced4da;
+    padding: 0.5rem 0.75rem;
+}
+
+.activity-filters .form-control:focus,
+.activity-filters .form-select:focus {
+    border-color: #86b7fe;
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.activity-pagination {
+    margin-top: 2rem;
+}
+
+.activity-pagination .page-link {
+    color: #007bff;
+    border: 1px solid #dee2e6;
+    padding: 0.5rem 0.75rem;
+    margin: 0 0.125rem;
+    border-radius: 0.375rem;
+}
+
+.activity-pagination .page-link:hover {
+    background: #e9ecef;
+    border-color: #adb5bd;
+}
+
+.activity-pagination .page-item.active .page-link {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+}
+
+.activity-empty-state {
+    text-align: center;
+    padding: 3rem 1rem;
+    color: #6c757d;
+}
+
+.activity-empty-state i {
+    font-size: 3rem;
+    margin-bottom: 1rem;
+    color: #adb5bd;
+}
+
+/* Action type specific colors */
+.badge.bg-login {
+    background: #198754 !important;
+}
+
+.badge.bg-logout {
+    background: #fd7e14 !important;
+}
+
+.badge.bg-book {
+    background: #0d6efd !important;
+}
+
+.badge.bg-student {
+    background: #20c997 !important;
+}
+
+.badge.bg-event {
+    background: #6f42c1 !important;
+}
+
+.badge.bg-borrow {
+    background: #198754 !important;
+}
+
+.badge.bg-return {
+    background: #17a2b8 !important;
+}
+
+.badge.bg-delete {
+    background: #dc3545 !important;
+}
+
+.badge.bg-edit {
+    background: #ffc107 !important;
+    color: #212529 !important;
+}
+
+.badge.bg-add {
+    background: #198754 !important;
+}
+
+/* Responsive design */
 @media (max-width: 768px) {
-    .calendar-events-table .actions-cell {
-        width: 120px;
+    .activity-table .table {
+        font-size: 0.875rem;
     }
     
-    .calendar-events-table .delete-btn,
-    .calendar-events-table .edit-event-btn {
-        padding: 0.2rem 0.4rem !important;
-        font-size: 0.8rem !important;
+    .activity-table .table th,
+    .activity-table .table td {
+        padding: 0.5rem 0.25rem;
+    }
+    
+    .activity-user-info,
+    .activity-timestamp {
+        gap: 0.25rem;
+    }
+    
+    .activity-badge {
+        font-size: 0.625rem;
+        padding: 0.25rem 0.5rem;
+    }
+}
+
+@media (max-width: 576px) {
+    .activity-filters .row {
+        gap: 1rem;
+    }
+    
+    .activity-filters .col-md-3,
+    .activity-filters .col-md-2 {
+        flex: 0 0 100%;
+        max-width: 100%;
+    }
+}
+
+/* Print styles */
+@media print {
+    .activity-log-container {
+        background: white;
+        padding: 0;
+    }
+    
+    .btn, .pagination, .card-header, .activity-filters {
+        display: none !important;
+    }
+    
+    .card {
+        border: none !important;
+        box-shadow: none !important;
+    }
+    
+    .table {
+        font-size: 11px;
+    }
+    
+    .activity-table .table th,
+    .activity-table .table td {
+        padding: 0.25rem;
+    }
+    
+    .badge {
+        background: #f8f9fa !important;
+        color: #212529 !important;
+        border: 1px solid #dee2e6 !important;
     }
 }

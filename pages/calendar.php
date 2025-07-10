@@ -1,6 +1,7 @@
 <?php
 require_once '../includes/header.php';
 require_once '../includes/db.php';
+require_once '../includes/activity_logger.php';
 
 // Get current month and year first (needed for redirects)
 $current_month = isset($_GET['month']) ? intval($_GET['month']) : date('n');
@@ -21,6 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($stmt->execute()) {
                     $success = "Event added successfully!";
+                    // Log event creation
+                    logEventActivity($conn, 'created', $title);
                 } else {
                     $error = "Error adding event: " . $conn->error;
                 }
@@ -38,6 +41,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 
                 if ($stmt->execute()) {
                     $success = "Event updated successfully!";
+                    // Log event update
+                    logEventActivity($conn, 'updated', $title);
                 } else {
                     $error = "Error updating event: " . $conn->error;
                 }
@@ -71,6 +76,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             if ($affected_rows > 0) {
                                 $success = "Event '" . htmlspecialchars($event_data['title']) . "' deleted successfully!";
                                 error_log("CALENDAR DEBUG: SUCCESS - Event deleted");
+                                // Log event deletion
+                                logEventActivity($conn, 'deleted', $event_data['title']);
                             } else {
                                 $error = "Failed to delete event. No rows affected.";
                                 error_log("CALENDAR DEBUG: ERROR - No rows affected");

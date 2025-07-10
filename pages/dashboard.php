@@ -133,6 +133,150 @@ foreach ($current_month_events as $event) {
     padding: 8px 12px;
     font-size: 12px;
 }
+
+/* Modal styles */
+.modal-sm {
+    max-width: 400px;
+}
+
+.alert-sm {
+    padding: 0.5rem 0.75rem;
+    margin-bottom: 1rem;
+    font-size: 0.875rem;
+}
+
+.modal-body .form-label {
+    font-weight: 500;
+}
+
+.modal-body .form-control:focus {
+    border-color: #007bff;
+    box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+/* Fix modal backdrop and z-index issues */
+#passwordModal {
+    z-index: 1060 !important;
+}
+
+#passwordModal .modal-backdrop {
+    z-index: 1055 !important;
+}
+
+.modal-backdrop.show {
+    opacity: 0.5;
+}
+
+/* Ensure modal content is above backdrop */
+.modal-dialog {
+    z-index: 1061 !important;
+    position: relative;
+}
+
+/* Mini Calendar Styles */
+.mini-calendar {
+    padding: 1rem;
+}
+
+.calendar-header {
+    text-align: center;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #495057;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 2px;
+}
+
+.day-header {
+    text-align: center;
+    font-weight: 600;
+    padding: 0.5rem;
+    background-color: #f8f9fa;
+    color: #6c757d;
+    font-size: 0.75rem;
+}
+
+.calendar-day {
+    text-align: center;
+    padding: 0.5rem;
+    cursor: pointer;
+    position: relative;
+    min-height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.875rem;
+    border: 1px solid transparent;
+}
+
+.calendar-day:hover {
+    background-color: #f8f9fa;
+}
+
+.calendar-day.today {
+    background-color: #007bff;
+    color: white;
+    font-weight: 600;
+    border-radius: 50%;
+}
+
+.calendar-day.has-events {
+    background-color: #e7f3ff;
+    border: 1px solid #007bff;
+}
+
+.calendar-day.has-events.today {
+    background-color: #007bff;
+}
+
+.calendar-day.empty {
+    cursor: default;
+}
+
+.event-dot {
+    position: absolute;
+    bottom: 2px;
+    right: 2px;
+    width: 4px;
+    height: 4px;
+    background-color: #28a745;
+    border-radius: 50%;
+}
+
+.today .event-dot {
+    background-color: #fff;
+}
+
+/* Upcoming Events */
+.upcoming-event {
+    padding: 0.5rem 0;
+    border-bottom: 1px solid #e9ecef;
+}
+
+.upcoming-event:last-child {
+    border-bottom: none;
+}
+
+.event-date {
+    font-size: 0.75rem;
+    color: #007bff;
+    font-weight: 600;
+}
+
+.event-title {
+    font-size: 0.875rem;
+    color: #495057;
+    margin: 0.25rem 0;
+}
+
+.event-time {
+    font-size: 0.75rem;
+    color: #6c757d;
+}
 </style>
 
 <div class="container-fluid py-3">
@@ -253,6 +397,11 @@ foreach ($current_month_events as $event) {
                             <a href="scan.php" target="_blank" class="btn btn-outline-dark w-100 quick-action-btn">
                                 <i class="bi bi-qr-code-scan"></i> Scan
                             </a>
+                        </div>
+                        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-2">
+                            <button type="button" class="btn btn-outline-danger w-100 quick-action-btn" onclick="accessActivityLogs()">
+                                <i class="bi bi-activity"></i> Activity Logs
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -458,6 +607,38 @@ foreach ($current_month_events as $event) {
     </div>
 </div>
 
+<!-- Password Verification Modal for Activity Logs -->
+<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="passwordModalLabel">
+                    <i class="bi bi-shield-lock"></i> Admin Verification Required
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="alert alert-warning alert-sm">
+                    <i class="bi bi-info-circle"></i> Enter your password to access Activity Logs.
+                </div>
+                <form id="passwordForm" onsubmit="return false;">
+                    <div class="mb-3">
+                        <label for="adminPassword" class="form-label">Password</label>
+                        <input type="password" class="form-control" id="adminPassword" required autocomplete="current-password">
+                        <div class="invalid-feedback" id="passwordError"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-primary btn-sm" onclick="verifyPassword()">
+                    <i class="bi bi-unlock"></i> Verify & Access
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
 // Borrowing Trends Chart
 document.addEventListener('DOMContentLoaded', function() {
@@ -508,6 +689,168 @@ document.addEventListener('DOMContentLoaded', function() {
 setInterval(function() {
     location.reload();
 }, 300000);
+
+// Debug function to clean up modal issues
+function cleanupModals() {
+    // Remove all modal backdrops
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+        backdrop.remove();
+    });
+    
+    // Reset body classes and styles
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+    
+    // Reset modal state
+    const modal = document.getElementById('passwordModal');
+    modal.classList.remove('show');
+    modal.style.display = 'none';
+    modal.setAttribute('aria-hidden', 'true');
+    modal.removeAttribute('aria-modal');
+    
+    console.log('Modal cleanup completed');
+}
+
+// Activity Logs Access Function
+function accessActivityLogs() {
+    // Remove any existing modal backdrops first
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+        backdrop.remove();
+    });
+    
+    // Reset modal state
+    const modalElement = document.getElementById('passwordModal');
+    modalElement.classList.remove('show');
+    modalElement.style.display = 'none';
+    modalElement.setAttribute('aria-hidden', 'true');
+    modalElement.removeAttribute('aria-modal');
+    
+    // Create new modal instance with proper configuration
+    const modal = new bootstrap.Modal(modalElement, {
+        backdrop: 'static',
+        keyboard: false,
+        focus: true
+    });
+    
+    // Clear previous error states
+    document.getElementById('adminPassword').value = '';
+    document.getElementById('adminPassword').classList.remove('is-invalid');
+    document.getElementById('passwordError').textContent = '';
+    
+    // Show modal
+    modal.show();
+    
+    // Focus on password input after modal is shown
+    modalElement.addEventListener('shown.bs.modal', function() {
+        document.getElementById('adminPassword').focus();
+    }, { once: true });
+}
+
+// Password Verification Function
+function verifyPassword() {
+    const password = document.getElementById('adminPassword').value;
+    const passwordInput = document.getElementById('adminPassword');
+    const errorDiv = document.getElementById('passwordError');
+    
+    if (!password) {
+        passwordInput.classList.add('is-invalid');
+        errorDiv.textContent = 'Password is required.';
+        return;
+    }
+    
+    // Show loading state
+    const verifyBtn = document.querySelector('[onclick="verifyPassword()"]');
+    const originalText = verifyBtn.innerHTML;
+    verifyBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>Verifying...';
+    verifyBtn.disabled = true;
+    
+    // Send AJAX request to verify password
+    fetch('verify_admin_password.php', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            password: password
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Password is correct, close modal and redirect
+            const modal = bootstrap.Modal.getInstance(document.getElementById('passwordModal'));
+            if (modal) {
+                modal.hide();
+            }
+            
+            // Clean up any remaining backdrops
+            setTimeout(() => {
+                document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                    backdrop.remove();
+                });
+                document.body.classList.remove('modal-open');
+                document.body.style.removeProperty('overflow');
+                document.body.style.removeProperty('padding-right');
+                
+                // Redirect to activity logs
+                window.location.href = 'activity_log.php';
+            }, 100);
+        } else {
+            // Password is incorrect
+            passwordInput.classList.add('is-invalid');
+            errorDiv.textContent = data.message || 'Invalid password.';
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        passwordInput.classList.add('is-invalid');
+        errorDiv.textContent = 'An error occurred. Please try again.';
+    })
+    .finally(() => {
+        // Reset button state
+        verifyBtn.innerHTML = originalText;
+        verifyBtn.disabled = false;
+    });
+}
+
+// Handle Enter key press in password modal
+document.addEventListener('DOMContentLoaded', function() {
+    // Clean up any existing modal backdrops on page load
+    document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+        backdrop.remove();
+    });
+    document.body.classList.remove('modal-open');
+    document.body.style.removeProperty('overflow');
+    document.body.style.removeProperty('padding-right');
+    
+    // Handle Enter key in password field
+    document.getElementById('adminPassword').addEventListener('keypress', function(e) {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            verifyPassword();
+        }
+    });
+    
+    // Handle modal close events
+    const passwordModal = document.getElementById('passwordModal');
+    passwordModal.addEventListener('hidden.bs.modal', function() {
+        // Clean up modal state
+        document.getElementById('adminPassword').value = '';
+        document.getElementById('adminPassword').classList.remove('is-invalid');
+        document.getElementById('passwordError').textContent = '';
+        
+        // Ensure backdrop is removed
+        setTimeout(() => {
+            document.querySelectorAll('.modal-backdrop').forEach(backdrop => {
+                backdrop.remove();
+            });
+            document.body.classList.remove('modal-open');
+            document.body.style.removeProperty('overflow');
+            document.body.style.removeProperty('padding-right');
+        }, 100);
+    });
+});
 </script>
 
 <?php require_once '../includes/footer.php'; ?>
